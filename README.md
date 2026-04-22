@@ -1,24 +1,60 @@
-# Marketplace Privado de Solicitaciones
-### Solana · Anchor · Rust
+# Centralize — Marketplace Privado de Solicitaciones
 
-EL objetivo del proyecto y el cual es mas grande que solo algo sencillo, es:
-1. buscar / explorar un proyecto mas complejo y el comprotamiento de Solana
-2. poder realziar el proyecto asi como asesoria y redes privadas (esa fue la razon de levantar solana en docker aunque no es para redes privadas en PROD si bien poder comenzar en DEV).
-3. poder conseguir algun empleo en solana Rust y poder tener un proyecto mas complejo de estudio.
+### Solana · Anchor · Rust · Axum · Docker
 
-Registro inmutable on-chain de membresías, auditorías, calificaciones
-y solicitudes privadas de servicio entre empresas y proveedores.
+---
 
-REFERCIAN E INTRO A LA PRIMER ETAPA DEL PROYECTO
-centralize-intro.html (Open with live server)
+## Por qué existe este proyecto
 
-Aun en desarrollo y mucha logica y arquitectura por mejorar, de tener problemas favor de comunicarse con:
+Este no es un proyecto sencillo de demostración. Tiene tres objetivos reales:
 
-Gerardo Ruiz Bustani
-email: gbustsni@soflib.com (email de proyectos)
-email: solbustsni@gmail.com (email personal)
-what'sApp: +52 55 1689 8561
-www.soflib.com
+1. **Explorar Solana en profundidad** — entender el comportamiento de una blockchain de alta velocidad con contratos complejos, PDAs, cuentas serializadas y discriminadores Anchor.
+
+2. **Construir infraestructura de desarrollo seria** — levantar Solana en Docker aunque no sea para redes privadas en producción, sí permite un entorno de desarrollo repetible, aislado y fácil de compartir con otros desarrolladores.
+
+3. **Proyecto de estudio y portafolio** — demostrar capacidad técnica en el stack Solana + Rust con un caso de uso real: un marketplace B2B privado con membresías, auditorías y licitaciones.
+
+---
+
+## Qué hace
+
+Registro **inmutable** on-chain de:
+
+- Membresías de empresas y proveedores
+- Auditorías entre pares
+- Calificaciones de proveedores
+- Solicitudes privadas de servicio (licitaciones)
+
+Cada acción genera una transacción en Solana. No hay base de datos central que pueda ser alterada o eliminada.
+
+---
+
+## Estado actual
+
+> ⚠️ **En desarrollo activo.** La arquitectura y lógica del contrato siguen evolucionando. Hay áreas conocidas que mejorar en diseño de cuentas, manejo de errores y flujos de autorización.
+
+Para ver la intro completa de la Etapa 1, abre con Live Server:
+
+```
+frontend/centralize-intro.html
+```
+
+---
+
+## Contacto
+
+Si tienes problemas, preguntas o quieres colaborar:
+
+**Gerardo Ruiz Bustani**
+
+| Canal | Dato |
+|-------|------|
+| Email proyectos | gbustani@soflib.com |
+| Email personal | solbustani@gmail.com |
+| WhatsApp | +52 55 1689 8561 |
+| Web | [soflib.com](https://www.soflib.com) |
+
+---
 
 ---
 
