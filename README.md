@@ -12,6 +12,14 @@ y solicitudes privadas de servicio entre empresas y proveedores.
 REFERCIAN E INTRO A LA PRIMER ETAPA DEL PROYECTO
 centralize-intro.html (Open with live server)
 
+Aun en desarrollo y mucha logica y arquitectura por mejorar, de tener problemas favor de comunicarse con:
+
+Gerardo Ruiz Bustani
+email: gbustsni@soflib.com (email de proyectos)
+email: solbustsni@gmail.com (email personal)
+what'sApp: +52 55 1689 8561
+www.soflib.com
+
 ---
 
 ## Estructura del proyecto
