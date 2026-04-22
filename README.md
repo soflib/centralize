@@ -164,3 +164,9 @@ RFC
 ACM0101011AA (12 chars)
 Hash Doc. Constitución (64 hex)
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+
+
+*************************************************************************************************
+Escalabilidad:
+Centrilize tiene objectivo poder agregar en un futuro agregar, firma de documentos, pagos entre y a proveedores / clientes.
