@@ -1,6 +1,8 @@
 REFERCIAN E INTRO A LA PRIMER ETAPA DEL PROYECTO
 centralize-intro.html
 
+en .env.example viene el ejemplo del .env para infrastructure/dev
+
 
 # 1. Instalar Solana en PATH
 curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
