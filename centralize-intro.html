@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centralize — Marketplace de Solicitaciones</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:    #0d0d0d;
+    --paper:  #f5f0e8;
+    --rust:   #c4410c;
+    --steel:  #2a3f5f;
+    --gold:   #d4a017;
+    --muted:  #7a7060;
+    --border: #d6cfc2;
+    --display: 'Bebas Neue', sans-serif;
+    --body:    'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* ── Grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 32px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .logo-mark {
+    font-family: var(--display);
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--ink);
+  }
+
+  .logo-mark span { color: var(--rust); }
+
+  .header-tag {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 90vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    padding: 80px 48px 80px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--rust);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(72px, 8vw, 120px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    color: var(--ink);
+    margin-bottom: 32px;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--rust);
+    display: block;
+  }
+
+  .hero-desc {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 460px;
+    margin-bottom: 48px;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 14px 32px;
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover { background: var(--rust); }
+
+  .btn-secondary {
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .btn-secondary:hover { color: var(--ink); border-color: var(--ink); }
+
+  .hero-right {
+    position: relative;
+    background: var(--steel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-diagram {
+    position: relative;
+    width: 380px;
+    height: 380px;
+  }
+
+  .diagram-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .ring-1 { inset: 0; animation: spin 40s linear infinite; }
+  .ring-2 { inset: 40px; animation: spin 30s linear infinite reverse; border-style: dashed; }
+  .ring-3 { inset: 80px; animation: spin 20s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .diagram-center {
+    position: absolute;
+    inset: 120px;
+    background: var(--rust);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .diagram-center-text {
+    font-family: var(--display);
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: white;
+  }
+
+  .diagram-center-sub {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .diagram-node {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .diagram-node svg { opacity: 0.8; }
+
+  .diagram-node span {
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .node-1 { top: 20px; left: 158px; }
+  .node-2 { top: 158px; right: 20px; }
+  .node-3 { bottom: 20px; left: 158px; }
+  .node-4 { top: 158px; left: 20px; }
+
+  .hero-right-label {
+    position: absolute;
+    bottom: 32px;
+    left: 32px;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .stat-item {
+    padding: 32px 48px;
+    border-right: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+
+  .stat-item:last-child { border-right: none; }
+  .stat-item.visible { opacity: 1; transform: translateY(0); }
+
+  .stat-num {
+    font-family: var(--display);
+    font-size: 48px;
+    letter-spacing: 2px;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-num span { color: var(--rust); }
+
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── Section ── */
+  section {
+    padding: 100px 48px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-size: clamp(48px, 5vw, 72px);
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+
+  /* ── How it works ── */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 64px;
+    border: 1px solid var(--border);
+  }
+
+  .step {
+    padding: 40px 32px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+
+  .step:last-child { border-right: none; }
+  .step.visible { opacity: 1; transform: translateY(0); }
+
+  .step-num {
+    font-family: var(--display);
+    font-size: 80px;
+    letter-spacing: 2px;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .step-title {
+    font-family: var(--display);
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .step-icon {
+    position: absolute;
+    top: 40px;
+    right: 32px;
+    width: 32px;
+    height: 32px;
+    background: var(--rust);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Roles ── */
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-top: 64px;
+    border: 1px solid var(--border);
+  }
+
+  .role-card {
+    background: var(--paper);
+    padding: 48px 40px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+
+  .role-card.visible { opacity: 1; transform: translateY(0); }
+
+  .role-card:hover { background: var(--ink); color: var(--paper); }
+  .role-card:hover .role-title { color: var(--paper); }
+  .role-card:hover .role-desc { color: rgba(255,255,255,0.5); }
+  .role-card:hover .role-tag { background: var(--rust); color: white; border-color: var(--rust); }
+
+  .role-tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    transition: all 0.2s;
+  }
+
+  .role-icon {
+    font-size: 40px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .role-title {
+    font-family: var(--display);
+    font-size: 32px;
+    letter-spacing: 2px;
+    color: var(--ink);
+    margin-bottom: 16px;
+    transition: color 0.2s;
+  }
+
+  .role-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  .role-features {
+    margin-top: 24px;
+    list-style: none;
+  }
+
+  .role-features li {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .role-card:hover .role-features li {
+    color: rgba(255,255,255,0.5);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .role-features li::before {
+    content: '→';
+    color: var(--rust);
+    font-size: 12px;
+  }
+
+  /* ── Tech stack ── */
+  .tech-section {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 80px 48px;
+  }
+
+  .tech-section .section-label { color: var(--gold); }
+  .tech-section .section-label::after { background: rgba(255,255,255,0.1); }
+  .tech-section h2 { color: var(--paper); }
+
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.05);
+    margin-top: 48px;
+  }
+
+  .tech-item {
+    background: var(--ink);
+    padding: 32px 24px;
+    text-align: center;
+    transition: background 0.2s;
+  }
+
+  .tech-item:hover { background: #1a1a1a; }
+
+  .tech-name {
+    font-family: var(--display);
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--paper);
+    margin-bottom: 8px;
+  }
+
+  .tech-role {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .tech-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--rust);
+    margin: 0 auto 16px;
+  }
+
+  /* ── Setup section ── */
+  .setup-section {
+    background: var(--steel);
+    color: white;
+    padding: 80px 48px;
+  }
+
+  .setup-section .section-label { color: var(--gold); }
+  .setup-section .section-label::after { background: rgba(255,255,255,0.15); }
+  .setup-section h2 { color: white; }
+
+  .setup-steps {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .setup-block {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 32px;
+  }
+
+  .setup-block-title {
+    font-family: var(--display);
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .setup-block-title::before {
+    content: attr(data-num);
+    font-size: 32px;
+    color: rgba(255,255,255,0.1);
+    font-family: var(--display);
+    letter-spacing: 2px;
+  }
+
+  pre {
+    background: rgba(0,0,0,0.3);
+    padding: 16px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #86efac;
+    overflow-x: auto;
+    border-left: 2px solid var(--rust);
+  }
+
+  .setup-note {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding: 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-logo {
+    font-family: var(--display);
+    font-size: 20px;
+    letter-spacing: 3px;
+  }
+
+  .footer-logo span { color: var(--rust); }
+
+  .footer-note {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .footer-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+  }
+
+  /* ── Animations ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    header { padding: 20px 24px; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+    .hero-left { padding: 48px 24px; }
+    section { padding: 60px 24px; }
+    .stats-bar { grid-template-columns: 1fr 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .roles-grid { grid-template-columns: 1fr; }
+    .tech-grid { grid-template-columns: repeat(3, 1fr); }
+    .setup-steps { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">CENTR<span>A</span>LIZE</div>
+  <div class="header-tag">Etapa 1 — Alpha</div>
+</header>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Marketplace Blockchain</div>
+    <h1>MERCADO<em>PRIVADO</em>VERIFICADO</h1>
+    <p class="hero-desc">
+      Plataforma descentralizada para registrar empresas y proveedores, publicar licitaciones privadas, auditar servicios y calificar proveedores — todo con registro inmutable en Solana.
+    </p>
+    <div class="hero-cta">
+      <a href="#como-funciona" class="btn-primary">Ver cómo funciona</a>
+      <a href="#setup" class="btn-secondary">Setup técnico</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-diagram">
+      <div class="diagram-ring ring-1"></div>
+      <div class="diagram-ring ring-2"></div>
+      <div class="diagram-ring ring-3"></div>
+      <div class="diagram-center">
+        <div class="diagram-center-text">SOL</div>
+        <div class="diagram-center-sub">Blockchain</div>
+      </div>
+      <div class="diagram-node node-1">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span>Empresa</span>
+      </div>
+      <div class="diagram-node node-2">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        <span>Proveedor</span>
+      </div>
+      <div class="diagram-node node-3">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>Auditoría</span>
+      </div>
+      <div class="diagram-node node-4">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Solicitud</span>
+      </div>
+    </div>
+    <div class="hero-right-label">Red Solana — Localnet</div>
+  </div>
+</div>
+
+<!-- ── Stats ── -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num">01<span>.</span></div>
+    <div class="stat-label">Etapa actual</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">04<span>.</span></div>
+    <div class="stat-label">Módulos implementados</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">∞<span>.</span></div>
+    <div class="stat-label">Registros inmutables</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">0<span>x</span></div>
+    <div class="stat-label">Intermediarios</div>
+  </div>
+</div>
+
+<!-- ── Cómo funciona ── -->
+<section id="como-funciona">
+  <div class="section-label">Flujo de operación</div>
+  <h2>CÓMO FUNCIONA</h2>
+  <p style="font-size:16px; color:var(--muted); max-width:600px; line-height:1.7;">
+    Cada acción queda registrada permanentemente en la blockchain de Solana. No hay base de datos central que pueda ser alterada.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-icon">
+        <svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      </div>
+      <div class="step-title">REGISTRO</div>
+      <div class="step-desc">Empresas y proveedores se registran con documentos hasheados. La membresía queda pendiente hasta confirmar pago.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-icon">
+        <svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="step-title">VERIFICACIÓN</div>
+      <div class="step-desc">El administrador activa membresías tras confirmar pago fiat. El hash del comprobante queda on-chain.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-icon">
+        <svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div class="step-title">LICITACIÓN</div>
+      <div class="step-desc">Empresas con membresía activa publican solicitudes privadas. Solo proveedores verificados pueden postularse.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-icon">
+        <svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="step-title">CALIFICACIÓN</div>
+      <div class="step-desc">Tras completar el servicio, la empresa califica al proveedor. El historial es público e inmutable.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Roles ── -->
+<section style="padding-top:0;">
+  <div class="section-label">Participantes</div>
+  <h2>TRES ROLES</h2>
+
+  <div class="roles-grid">
+    <div class="role-card">
+      <div class="role-tag">Administrador</div>
+      <span class="role-icon">🔑</span>
+      <div class="role-title">ADMIN</div>
+      <div class="role-desc">Controla la plataforma. Activa y renueva membresías tras confirmar pagos fiat fuera de cadena.</div>
+      <ul class="role-features">
+        <li>Inicializar la plataforma</li>
+        <li>Activar membresías empresa</li>
+        <li>Activar membresías proveedor</li>
+        <li>Renovar membresías vencidas</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <div class="role-tag">Empresa</div>
+      <span class="role-icon">🏢</span>
+      <div class="role-title">EMPRESA</div>
+      <div class="role-desc">Registra su empresa con documentos, obtiene membresía y publica solicitudes privadas de servicio.</div>
+      <ul class="role-features">
+        <li>Registrar empresa con RFC</li>
+        <li>Publicar solicitudes privadas</li>
+        <li>Iniciar y concluir auditorías</li>
+        <li>Calificar proveedores</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <div class="role-tag">Proveedor</div>
+      <span class="role-icon">⚙️</span>
+      <div class="role-title">PROVEEDOR</div>
+      <div class="role-desc">Se registra con documentos de identidad y experiencia. Una vez verificado puede recibir solicitudes.</div>
+      <ul class="role-features">
+        <li>Registrar perfil con documentos</li>
+        <li>Ser auditado por empresas</li>
+        <li>Recibir calificaciones públicas</li>
+        <li>Construir reputación on-chain</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Tech Stack ── -->
+<div class="tech-section">
+  <div class="section-label">Stack técnico</div>
+  <h2>CONSTRUIDO CON</h2>
+  <div class="tech-grid">
+    <div class="tech-item">
+      <div class="tech-dot"></div>
+      <div class="tech-name">SOLANA</div>
+      <div class="tech-role">Blockchain</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-dot"></div>
+      <div class="tech-name">ANCHOR</div>
+      <div class="tech-role">Smart Contracts</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-dot"></div>
+      <div class="tech-name">RUST</div>
+      <div class="tech-role">Backend + Contrato</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-dot"></div>
+      <div class="tech-name">AXUM</div>
+      <div class="tech-role">API REST</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-dot"></div>
+      <div class="tech-name">DOCKER</div>
+      <div class="tech-role">Infraestructura</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Setup ── -->
+<div class="setup-section" id="setup">
+  <div class="section-label">Instrucciones</div>
+  <h2>SETUP LOCAL</h2>
+  <p style="color:rgba(255,255,255,0.5); font-size:15px; max-width:600px; line-height:1.7; margin-top:16px;">
+    Sigue estos pasos en orden para levantar el entorno local completo.
+  </p>
+
+  <div class="setup-steps">
+    <div class="setup-block">
+      <div class="setup-block-title" data-num="01">SETUP INICIAL</div>
+      <pre>
+# Instalar Solana
+curl --proto '=https' --tlsv1.2 -sSfL \
+  https://solana-install.solana.workers.dev | bash
+
+export PATH="$HOME/.local/share/solana/\
+install/active_release/bin:$PATH"
+
+# Crear keypair (si no existe)
+solana address || solana-keygen new \
+  --outfile ~/.config/solana/id.json \
+  --no-bip39-passphrase
+
+solana config set --url http://localhost:8899</pre>
+      <div class="setup-note">⚠️ Solo la primera vez. Si ya tienes keypair, sáltalo.</div>
+    </div>
+
+    <div class="setup-block">
+      <div class="setup-block-title" data-num="02">COMPILAR CONTRATO</div>
+      <pre>
+cd program/
+
+# Primera compilación
+anchor build
+
+# Generar keypair fijo del programa
+solana-keygen new \
+  --outfile target/deploy/centralize-keypair.json \
+  --no-bip39-passphrase --force
+
+# Ver el Program ID permanente
+solana-keygen pubkey \
+  target/deploy/centralize-keypair.json
+
+# Actualizar en: lib.rs, Anchor.toml, .env
+anchor keys sync
+anchor build</pre>
+      <div class="setup-note">⚠️ El Program ID generado es permanente. Ponlo en los 3 archivos.</div>
+    </div>
+
+    <div class="setup-block">
+      <div class="setup-block-title" data-num="03">LEVANTAR DOCKER</div>
+      <pre>
+cd infrastructure/
+
+make dev
+
+# Esperar ~15 segundos...
+
+# Airdrop SOL al validator local
+solana airdrop 10 --url http://localhost:8899
+solana airdrop 10 --url http://localhost:8899
+solana airdrop 10 --url http://localhost:8899</pre>
+      <div class="setup-note">⚠️ Nunca uses "docker compose down" o perderás el ledger.</div>
+    </div>
+
+    <div class="setup-block">
+      <div class="setup-block-title" data-num="04">DESPLEGAR Y USAR</div>
+      <pre>
+cd program/
+
+# Desplegar contrato
+anchor program deploy \
+  target/deploy/centralize.so \
+  --provider.cluster localnet
+
+# Abrir el HTML de la consola API
+# → Click en "Initialize Platform" (naranja)
+# → Registrar empresa
+# → Registrar proveedor
+# → ¡Listo!</pre>
+      <div class="setup-note">⚠️ "Initialize Platform" se llama UNA SOLA VEZ después de cada deploy.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-logo">CENTR<span>A</span>LIZE</div>
+  <div class="footer-note">Etapa 1 — Registro e identidad on-chain</div>
+  <div class="footer-tag">Solana · Localnet</div>
+</footer>
+
+<script>
+  // Intersection observer para animaciones
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, entry.target.dataset.delay || 0);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.stat-item, .step, .role-card, .fade-in').forEach((el, i) => {
+    el.dataset.delay = (i % 4) * 100;
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>

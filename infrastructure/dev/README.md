@@ -1,3 +1,7 @@
+REFERCIAN E INTRO A LA PRIMER ETAPA DEL PROYECTO
+centralize-intro.html
+
+
 # 1. Instalar Solana en PATH
 curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
@@ -6,6 +10,7 @@ echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' 
 **********************************************************************************************
 # 2. Keypair de tu wallet (si ya existe, sáltalo)
 solana-keygen new --outfile ~/.config/solana/id.json --no-bip39-passphrase
+solana address
 # si ya existe: solo corre → solana address
 
 solana config set --url http://localhost:8899
@@ -50,7 +55,7 @@ cd "/program"
 anchor program deploy target/deploy/centralize.so --provider.cluster localnet
 
 **********************************************************************************************
-# 11. Abrir el HTML y probar
+# 11. Abrir el HTML y probar(Open with live server)
 
 
 
