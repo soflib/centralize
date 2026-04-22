@@ -1,64 +1,73 @@
-# CertChain + TicketChain — Stack local Solana
+# 1. Instalar Solana en PATH
+curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> ~/.bashrc
 
-## Requisitos
-- Docker >= 24.x
-- Docker Compose >= 2.x
-- `openssl` (para generar swarm.key)
+**********************************************************************************************
+# 2. Keypair de tu wallet (si ya existe, sáltalo)
+solana-keygen new --outfile ~/.config/solana/id.json --no-bip39-passphrase
+# si ya existe: solo corre → solana address
 
-## Primer arranque
+solana config set --url http://localhost:8899
 
-```bash
-# 1. Clonar / entrar al proyecto
-cd certchain
+**********************************************************************************************
+# 3. Primera compilación para crear la carpeta target/deploy/
+cd "/program"
+anchor build
 
-# 2. Crear archivo de secrets
-cp .env.example .env
-# Editar .env y cambiar POSTGRES_PASSWORD
+**********************************************************************************************
+# 4. Generar keypair FIJO del programa (sobreescribe el que generó anchor)
+solana-keygen new --outfile target/deploy/centralize-keypair.json --no-bip39-passphrase
+if exists: solana-keygen pubkey target/deploy/centralize-keypair.json
 
-# 3. Generar swarm key para IPFS privado
-bash scripts/gen-swarm-key.sh
+**********************************************************************************************
+# 5. Ver el Program ID — ANÓTALO, es permanente
+solana-keygen pubkey target/deploy/centralize-keypair.json
 
-# 4. Levantar todo
-docker-compose up -d
+**********************************************************************************************
+# 6. Poner ese PROGRAM_ID en los 3 archivos:
+#    a) programs/centralize/src/lib.rs  → declare_id!("PROGRAM_ID")
+#    b) Anchor.toml → [programs.localnet] centralize = "PROGRAM_ID"
+#    c) infrastructure/.env → PROGRAM_ID=...
 
-# 5. Ver logs
-docker-compose logs -f
-```
+**********************************************************************************************
+# 7. Recompilar con el ID correcto
+anchor keys sync
+anchor build
 
-## Servicios y puertos
+**********************************************************************************************
+# 8. Levantar Docker
+cd "/infrastructure"
+make dev
 
-| Servicio | Puerto | Descripción |
-|---|---|---|
-| solana-validator | 8899 | RPC HTTP |
-| solana-validator | 8900 | RPC WebSocket |
-| postgres | 5432 | PostgreSQL (solo 127.0.0.1) |
-| ipfs | 5001 | API IPFS (solo 127.0.0.1) |
-| ipfs | 8082 | Gateway IPFS |
+**********************************************************************************************
+# 9. Esperar 15 segundos que el validator arranque, luego airdrop
+solana airdrop 10 --url http://localhost:8899
 
-## Desplegar programas
+**********************************************************************************************
+# 10. Desplegar el contrato
+cd "/program"
+anchor program deploy target/deploy/centralize.so --provider.cluster localnet
 
-Coloca tus archivos `.so` compilados en `./programs/`:
-```
-programs/
-  certs.so
-  tickets.so
-```
+**********************************************************************************************
+# 11. Abrir el HTML y probar
 
-Luego reinicia el deployer:
-```bash
-docker-compose up program-deployer
-```
 
-## Verificar estado
-```bash
-bash scripts/check-deploy.sh
-```
 
-## IPs fijas internas (entre contenedores)
+en el frontend:
 
-| Servicio | IP |
-|---|---|
-| solana-validator | 172.28.0.10 |
-| program-deployer | 172.28.0.11 |
-| postgres | 172.28.0.20 |
-| ipfs | 172.28.0.30 |
+1. correr initialize_platform para generar
+{ 
+    "success": true, 
+    "tx_signature": "..............................EcEPhCA", 
+    "timestamp": "2026-04-22T18: 21: 00.603110073+00: 00", 
+    "mensaje": "Plataforma inicializada" 
+}
+
+para llenar un register_empresa:
+Nombre y Categoria (cualquiera)
+para:
+RFC
+ACM0101011AA (12 chars)
+Hash Doc. Constitución (64 hex)
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
