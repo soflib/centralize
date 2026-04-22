@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: centralize-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+
+    networks:
+      - centralize-network
+  # ── Node.js backend ─────────────────────────────────────
+  backend:
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build: 
+      context: ../../backend
+    container_name: ticketchain-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - PORT=3001
+      - RPC_URL=${RPC_URL}
+      - PROGRAM_ID=${PROGRAM_ID}
+      - KEYPAIR_PATH=/app/secrets/id.json
+    volumes:
+      - ./data:/app/data                  
+      - ${SOLANA_KEYPAIR_DIR}:/app/secrets:ro 
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/event || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    networks:
+      - centralize-network
+
+volumes:
+  postgres-data:
+    driver: local
+
+# ── Red interna ───────────────────────────────────────────
+networks:
+  centralize-network:
+    external: true
+
+
+
+
+
+
+

@@ -1,0 +1,32 @@
+# CA
+openssl req -new -x509 -days 365 -keyout ca.key -out ca.crt -subj "/CN=CA"
+
+# Servidor
+openssl req -new -keyout server.key -out server.csr -subj "/CN=postgres"
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -out server.crt -days 365
+
+# Cliente (el backend)
+openssl req -new -keyout client.key -out client.csr -subj "/CN=postgres"
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -out client.crt -days 365
+
+
+################### SIN PEM
+# CA
+openssl req -new -x509 -days 365 -nodes -keyout /home/ax56/certora/infrastructure/dev/certs/ca.key -out /home/ax56/certora/infrastructure/dev/certs/ca.crt -subj "/CN=CA"
+
+# Servidor
+openssl req -new -nodes -keyout /home/ax56/certora/infrastructure/dev/certs/server.key -out /home/ax56/certora/infrastructure/dev/certs/server.csr -subj "/CN=postgres"
+openssl x509 -req -in /home/ax56/certora/infrastructure/dev/certs/server.csr -CA /home/ax56/certora/infrastructure/dev/certs/ca.crt -CAkey /home/ax56/certora/infrastructure/dev/certs/ca.key -CAcreateserial -out /home/ax56/certora/infrastructure/dev/certs/server.crt -days 365
+
+# Cliente
+openssl req -new -nodes -keyout /home/ax56/certora/infrastructure/dev/certs/client.key -out /home/ax56/certora/infrastructure/dev/certs/client.csr -subj "/CN=postgres"
+openssl x509 -req \
+  -in /home/ax56/certora/infrastructure/dev/certs/client.csr \
+  -CA /home/ax56/certora/infrastructure/dev/certs/ca.crt \
+  -CAkey /home/ax56/certora/infrastructure/dev/certs/ca.key \
+  -CAcreateserial \
+  -out /home/ax56/certora/infrastructure/dev/certs/client.crt \
+  -days 365
+
+chmod 600 server.key client.key
+

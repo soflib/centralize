@@ -1,0 +1,21 @@
+docker exec -it <contenedor> psql -U <usuario> -d <base_de_datos> -W
+-- Ver todas las tablas
+\dt
+
+-- Ver columnas de una tabla
+\d tickets
+\d events
+\d sections
+
+-- Ver todos los registros
+SELECT * FROM tickets;
+SELECT * FROM events;
+SELECT * FROM sections;
+
+-- Ver tickets de forma más legible (sin que se corten las columnas)
+\x
+SELECT * FROM tickets;
+\x   -- desactiva el modo expandido
+
+-- Salir
+\q

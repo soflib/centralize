@@ -1,0 +1,7 @@
+[workspace]
+members = ["programs/centralize"]
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1

@@ -1,0 +1,41 @@
+services:
+
+  solana-validator:
+    image: solanalabs/solana:v1.18.26
+    restart: unless-stopped
+    ports:
+      - "8899:8899"   # RPC HTTP
+      - "8900:8900"   # RPC WebSocket
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    volumes:
+      - solana-ledger:/root/.config/solana/cli  # ← agrega esto
+    healthcheck:
+      test: ["CMD-SHELL", "solana --url http://localhost:8899 cluster-version || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+      
+    networks:
+    - centralize-network
+
+volumes:
+  solana-ledger:
+    driver: local
+
+
+
+# ── Red interna ───────────────────────────────────────────
+networks:
+  centralize-network:
+    external: true
+
+
+
+
+
+
+

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centralize — API Console</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0a0a0f;
+    --surface:  #111118;
+    --border:   #1e1e2e;
+    --accent:   #7c3aed;
+    --accent2:  #06b6d4;
+    --success:  #10b981;
+    --error:    #ef4444;
+    --warn:     #f59e0b;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --mono:     'JetBrains Mono', monospace;
+    --sans:     'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 56px 1fr;
+  }
+  header {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header .logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 2px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .base-url-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .base-url-wrap label { color: var(--muted); }
+  .base-url-wrap input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    border-radius: 4px;
+    width: 260px;
+    outline: none;
+  }
+  .base-url-wrap input:focus { border-color: var(--accent); }
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px 0;
+  }
+  .group-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px 20px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(124,58,237,0.05); }
+  .nav-item.active { color: var(--text); border-left-color: var(--accent); background: rgba(124,58,237,0.1); }
+  .nav-item.init { border-left-color: var(--warn) !important; color: var(--warn) !important; background: rgba(245,158,11,0.1) !important; }
+  .method-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    min-width: 34px;
+    text-align: center;
+  }
+  .method-badge.post { background: rgba(124,58,237,0.25); color: #a78bfa; }
+  .method-badge.warn { background: rgba(245,158,11,0.25); color: var(--warn); }
+  main { display: grid; overflow: hidden; }
+  .panel { display: none; padding: 28px 32px; overflow-y: auto; height: calc(100vh - 56px); }
+  .panel.active { display: block; }
+  .panel-header { margin-bottom: 24px; }
+  .panel-title { font-family: var(--sans); font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .endpoint-path { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .endpoint-path .method-badge { font-size: 11px; padding: 3px 8px; }
+  .alert-box {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.4);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--warn);
+    line-height: 1.6;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  input[type="text"], input[type="number"], textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+  .checkbox-field { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .checkbox-field input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .checkbox-field span { font-size: 13px; color: var(--text); }
+  select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    border-radius: 6px;
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+  }
+  select:focus { border-color: var(--accent); }
+  .send-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px 24px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .send-btn:hover { background: #6d28d9; transform: translateY(-1px); }
+  .send-btn:active { transform: translateY(0); }
+  .send-btn.warn-btn { background: var(--warn); color: #000; }
+  .send-btn.warn-btn:hover { background: #d97706; }
+  .send-btn.loading { opacity: 0.7; cursor: not-allowed; }
+  .send-btn.loading svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .response-box { margin-top: 24px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .response-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .status-pill { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .status-pill.ok      { background: rgba(16,185,129,0.2); color: var(--success); }
+  .status-pill.err     { background: rgba(239,68,68,0.2);  color: var(--error); }
+  .status-pill.pending { background: rgba(100,116,139,0.2); color: var(--muted); }
+  .response-body {
+    padding: 16px;
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--text);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .response-body .key  { color: #93c5fd; }
+  .response-body .str  { color: #86efac; }
+  .response-body .bool { color: #fca5a5; }
+  .response-body .num  { color: #fcd34d; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">centralize</div>
+  <div class="tag">API Console</div>
+  <div class="base-url-wrap">
+    <label>BASE URL</label>
+    <input type="text" id="baseUrl" value="http://localhost:3001">
+  </div>
+</header>
+
+<aside>
+  <!-- ⚠️ PRIMER PASO — solo después de cada deploy -->
+  <div class="group-label">⚠️ Setup (1 vez por deploy)</div>
+  <div class="nav-item init" onclick="show('initialize', this)">
+    <span class="method-badge warn">POST</span> initialize_platform
+  </div>
+
+  <div class="group-label">Empresas</div>
+  <div class="nav-item" onclick="show('register-empresa', this)">
+    <span class="method-badge post">POST</span> register_empresa
+  </div>
+
+  <div class="group-label">Proveedores</div>
+  <div class="nav-item" onclick="show('register-proveedor', this)">
+    <span class="method-badge post">POST</span> register_proveedor
+  </div>
+
+  <div class="group-label">Membresías</div>
+  <div class="nav-item" onclick="show('activar-empresa', this)">
+    <span class="method-badge post">POST</span> activar empresa
+  </div>
+  <div class="nav-item" onclick="show('activar-proveedor', this)">
+    <span class="method-badge post">POST</span> activar proveedor
+  </div>
+  <div class="nav-item" onclick="show('renovar-membresia', this)">
+    <span class="method-badge post">POST</span> renovar membresía
+  </div>
+
+  <div class="group-label">Auditorías</div>
+  <div class="nav-item" onclick="show('iniciar-auditoria', this)">
+    <span class="method-badge post">POST</span> iniciar
+  </div>
+  <div class="nav-item" onclick="show('concluir-auditoria', this)">
+    <span class="method-badge post">POST</span> concluir
+  </div>
+
+  <div class="group-label">Calificaciones</div>
+  <div class="nav-item" onclick="show('calificar', this)">
+    <span class="method-badge post">POST</span> calificar proveedor
+  </div>
+
+  <div class="group-label">Solicitudes</div>
+  <div class="nav-item" onclick="show('publicar-solicitud', this)">
+    <span class="method-badge post">POST</span> publicar
+  </div>
+  <div class="nav-item" onclick="show('asignar-solicitud', this)">
+    <span class="method-badge post">POST</span> asignar
+  </div>
+  <div class="nav-item" onclick="show('cerrar-solicitud', this)">
+    <span class="method-badge post">POST</span> cerrar
+  </div>
+</aside>
+
+<main>
+
+  <!-- ⚠️ initialize_platform — LLÁMALO UNA SOLA VEZ DESPUÉS DE CADA DEPLOY -->
+  <div class="panel active" id="panel-initialize">
+    <div class="panel-header">
+      <div class="panel-title">Initialize Platform</div>
+      <div class="endpoint-path"><span class="method-badge warn">POST</span>/api/marketplace/initialize</div>
+    </div>
+    <div class="alert-box">
+      ⚠️ <strong>Llama esto UNA SOLA VEZ después de cada <code>anchor program deploy</code>.</strong><br>
+      Crea la cuenta <code>PlatformConfig</code> en la blockchain. Sin esto, todas las demás operaciones fallarán.<br>
+      Si ya la llamaste antes y el validator no se reinició, no la vuelvas a llamar.
+    </div>
+    <button class="send-btn warn-btn" onclick="sendEmpty('initialize')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Inicializar Plataforma
+    </button>
+    <div class="response-box" id="res-initialize">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// Haz click en el botón para inicializar</div>
+    </div>
+  </div>
+
+  <!-- register_empresa -->
+  <div class="panel" id="panel-register-empresa">
+    <div class="panel-header">
+      <div class="panel-title">Registrar Empresa</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/empresa/register</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Nombre</label><input type="text" id="re-nombre" placeholder="Acme S.A. de C.V."></div>
+      <div class="field"><label>RFC</label><input type="text" id="re-rfc" placeholder="ACM010101AAA"></div>
+      <div class="field"><label>Categoría</label><input type="text" id="re-categoria" placeholder="Tecnología"></div>
+      <div class="field"><label>Hash Doc. Constitución (64 hex)</label><input type="text" id="re-hash" placeholder="64 caracteres hex"></div>
+    </div>
+    <button class="send-btn" onclick="send('register-empresa')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-register-empresa">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- register_proveedor -->
+  <div class="panel" id="panel-register-proveedor">
+    <div class="panel-header">
+      <div class="panel-title">Registrar Proveedor</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/proveedor/register</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Nombre</label><input type="text" id="rp-nombre" placeholder="Juan Pérez"></div>
+      <div class="field"><label>RFC</label><input type="text" id="rp-rfc" placeholder="PEPJ800101AAA"></div>
+      <div class="field full"><label>Descripción</label><textarea id="rp-descripcion" placeholder="Descripción del proveedor..."></textarea></div>
+      <div class="field"><label>Categoría</label><input type="text" id="rp-categoria" placeholder="Consultoría"></div>
+      <div class="field"><label>Hash Doc. Identidad (64 hex)</label><input type="text" id="rp-hash-id" placeholder="64 caracteres hex"></div>
+      <div class="field"><label>Hash Doc. Experiencia (64 hex)</label><input type="text" id="rp-hash-exp" placeholder="64 caracteres hex"></div>
+    </div>
+    <button class="send-btn" onclick="send('register-proveedor')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-register-proveedor">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- activar empresa -->
+  <div class="panel" id="panel-activar-empresa">
+    <div class="panel-header">
+      <div class="panel-title">Activar Membresía — Empresa</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/membresia/activar/empresa</div>
+    </div>
+    <div class="form-grid">
+      <div class="field full"><label>Wallet (Pubkey de la empresa)</label><input type="text" id="ae-wallet" placeholder="F9KnUhHuudz6R7hqBBrbWWSaq4U4PjUJB7VgRzzo6ZTz"></div>
+      <div class="field"><label>Hash Comprobante (64 hex)</label><input type="text" id="ae-hash" placeholder="64 caracteres hex"></div>
+      <div class="field"><label>Referencia de Pago</label><input type="text" id="ae-ref" placeholder="REF-2024-001"></div>
+    </div>
+    <button class="send-btn" onclick="send('activar-empresa')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-activar-empresa">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- activar proveedor -->
+  <div class="panel" id="panel-activar-proveedor">
+    <div class="panel-header">
+      <div class="panel-title">Activar Membresía — Proveedor</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/membresia/activar/proveedor</div>
+    </div>
+    <div class="form-grid">
+      <div class="field full"><label>Wallet (Pubkey del proveedor)</label><input type="text" id="ap-wallet" placeholder="F9KnUhHuudz6R7hqBBrbWWSaq4U4PjUJB7VgRzzo6ZTz"></div>
+      <div class="field"><label>Hash Comprobante (64 hex)</label><input type="text" id="ap-hash" placeholder="64 caracteres hex"></div>
+      <div class="field"><label>Referencia de Pago</label><input type="text" id="ap-ref" placeholder="REF-2024-001"></div>
+    </div>
+    <button class="send-btn" onclick="send('activar-proveedor')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-activar-proveedor">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- renovar membresía -->
+  <div class="panel" id="panel-renovar-membresia">
+    <div class="panel-header">
+      <div class="panel-title">Renovar Membresía</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/membresia/renovar</div>
+    </div>
+    <div class="form-grid">
+      <div class="field full"><label>Wallet (Pubkey)</label><input type="text" id="rm-wallet" placeholder="F9KnUhHuudz6R7hqBBrbWWSaq4U4PjUJB7VgRzzo6ZTz"></div>
+      <div class="field"><label>Hash Comprobante (64 hex)</label><input type="text" id="rm-hash" placeholder="64 caracteres hex"></div>
+      <div class="field"><label>Referencia de Pago</label><input type="text" id="rm-ref" placeholder="REF-2024-002"></div>
+    </div>
+    <button class="send-btn" onclick="send('renovar-membresia')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-renovar-membresia">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- iniciar auditoría -->
+  <div class="panel" id="panel-iniciar-auditoria">
+    <div class="panel-header">
+      <div class="panel-title">Iniciar Auditoría</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/auditoria/iniciar</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>ID Empresa (0 = primera registrada)</label><input type="number" id="ia-empresa" value="0" min="0"></div>
+      <div class="field"><label>ID Proveedor (0 = primero registrado)</label><input type="number" id="ia-proveedor" value="0" min="0"></div>
+    </div>
+    <button class="send-btn" onclick="send('iniciar-auditoria')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-iniciar-auditoria">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- concluir auditoría -->
+  <div class="panel" id="panel-concluir-auditoria">
+    <div class="panel-header">
+      <div class="panel-title">Concluir Auditoría</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/auditoria/concluir</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>ID Empresa</label><input type="number" id="ca-empresa" value="0" min="0"></div>
+      <div class="field"><label>ID Proveedor</label><input type="number" id="ca-proveedor" value="0" min="0"></div>
+      <div class="field">
+        <label>Resultado</label>
+        <select id="ca-resultado">
+          <option value="Aprobado">Aprobado</option>
+          <option value="Rechazado">Rechazado</option>
+          <option value="Observaciones">Observaciones</option>
+        </select>
+      </div>
+      <div class="field"><label>Hash Reporte (64 hex)</label><input type="text" id="ca-hash" placeholder="64 caracteres hex"></div>
+      <div class="field full"><label>Comentario</label><textarea id="ca-comentario" placeholder="Observaciones sobre la auditoría..."></textarea></div>
+    </div>
+    <button class="send-btn" onclick="send('concluir-auditoria')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-concluir-auditoria">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- calificar -->
+  <div class="panel" id="panel-calificar">
+    <div class="panel-header">
+      <div class="panel-title">Calificar Proveedor</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/calificacion</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>ID Empresa</label><input type="number" id="cp-empresa" value="0" min="0"></div>
+      <div class="field"><label>ID Proveedor</label><input type="number" id="cp-proveedor" value="0" min="0"></div>
+      <div class="field"><label>Puntuación (1-5)</label><input type="number" id="cp-p" min="1" max="5" value="5"></div>
+      <div class="field"><label>Cumplimiento (1-5)</label><input type="number" id="cp-pc" min="1" max="5" value="5"></div>
+      <div class="field"><label>Calidad (1-5)</label><input type="number" id="cp-pca" min="1" max="5" value="5"></div>
+      <div class="field"><label>Precio (1-5)</label><input type="number" id="cp-pp" min="1" max="5" value="5"></div>
+      <div class="field full"><label>Comentario</label><textarea id="cp-comentario" placeholder="Excelente proveedor..."></textarea></div>
+      <div class="field full">
+        <label class="checkbox-field">
+          <input type="checkbox" id="cp-recomienda" checked>
+          <span>Recomienda al proveedor</span>
+        </label>
+      </div>
+    </div>
+    <button class="send-btn" onclick="send('calificar')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-calificar">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- publicar solicitud -->
+  <div class="panel" id="panel-publicar-solicitud">
+    <div class="panel-header">
+      <div class="panel-title">Publicar Solicitud</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/solicitud/publicar</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>ID Empresa</label><input type="number" id="ps-empresa" value="0" min="0"></div>
+      <div class="field"><label>Categoría</label><input type="text" id="ps-categoria" placeholder="Auditoría"></div>
+      <div class="field"><label>Hash Detalle (64 hex)</label><input type="text" id="ps-hash" placeholder="64 caracteres hex"></div>
+      <div class="field"><label>Fecha Límite (Unix timestamp)</label><input type="number" id="ps-fecha" placeholder="1735689600"></div>
+      <div class="field full"><label>Descripción Breve</label><textarea id="ps-desc" placeholder="Necesitamos auditoría de procesos..."></textarea></div>
+    </div>
+    <button class="send-btn" onclick="send('publicar-solicitud')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-publicar-solicitud">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- asignar solicitud -->
+  <div class="panel" id="panel-asignar-solicitud">
+    <div class="panel-header">
+      <div class="panel-title">Asignar Solicitud</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/solicitud/asignar</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>ID Empresa</label><input type="number" id="as-empresa" value="0" min="0"></div>
+      <div class="field"><label>ID Proveedor</label><input type="number" id="as-proveedor" value="0" min="0"></div>
+      <div class="field full"><label>ID de Solicitud (hash del detalle)</label><input type="text" id="as-id" placeholder="mismo hash que usaste al publicar"></div>
+    </div>
+    <button class="send-btn" onclick="send('asignar-solicitud')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-asignar-solicitud">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+  <!-- cerrar solicitud -->
+  <div class="panel" id="panel-cerrar-solicitud">
+    <div class="panel-header">
+      <div class="panel-title">Cerrar Solicitud</div>
+      <div class="endpoint-path"><span class="method-badge post">POST</span>/api/marketplace/solicitud/cerrar</div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>ID Empresa</label><input type="number" id="cs-empresa" value="0" min="0"></div>
+      <div class="field"><label>ID de Solicitud (hash del detalle)</label><input type="text" id="cs-id" placeholder="mismo hash que usaste al publicar"></div>
+      <div class="field full">
+        <label class="checkbox-field">
+          <input type="checkbox" id="cs-completada" checked>
+          <span>Completada (desmarca para Cancelada)</span>
+        </label>
+      </div>
+    </div>
+    <button class="send-btn" onclick="send('cerrar-solicitud')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar</button>
+    <div class="response-box" id="res-cerrar-solicitud">
+      <div class="response-header"><span>RESPUESTA</span><span class="status-pill pending">—</span></div>
+      <div class="response-body">// La respuesta aparecerá aquí</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function show(id, el) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  function colorize(json) {
+    return JSON.stringify(json, null, 2)
+      .replace(/(".*?")(\s*:)/g, '<span class="key">$1</span>$2')
+      .replace(/:\s*(".*?")/g, ': <span class="str">$1</span>')
+      .replace(/:\s*(true|false)/g, ': <span class="bool">$1</span>')
+      .replace(/:\s*(\d+\.?\d*)/g, ': <span class="num">$1</span>');
+  }
+
+  function setResponse(id, status, data) {
+    const box  = document.getElementById('res-' + id);
+    const pill = box.querySelector('.status-pill');
+    const body = box.querySelector('.response-body');
+    pill.className = 'status-pill ' + (status >= 200 && status < 300 ? 'ok' : 'err');
+    pill.textContent = status || 'ERR';
+    body.innerHTML = colorize(data);
+  }
+
+  const v = id => document.getElementById(id).value;
+  const n = id => parseInt(document.getElementById(id).value) || 0;
+
+  // ── send sin body (initialize_platform) ──────────────────
+  async function sendEmpty(id) {
+    const btn  = document.querySelector(`#panel-${id} .send-btn`);
+    const base = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const url  = base + '/api/marketplace/initialize';
+    btn.classList.add('loading');
+    btn.disabled = true;
+    try {
+      const res  = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({}),
+      });
+      const data = await res.json();
+      setResponse(id, res.status, data);
+    } catch (err) {
+      setResponse(id, 0, { error: err.message });
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  }
+
+  const payloads = {
+    'register-empresa': () => ({
+      nombre:                v('re-nombre'),
+      rfc:                   v('re-rfc'),
+      categoria:             v('re-categoria'),
+      hash_doc_constitucion: v('re-hash'),
+    }),
+    'register-proveedor': () => ({
+      nombre:               v('rp-nombre'),
+      rfc:                  v('rp-rfc'),
+      descripcion:          v('rp-descripcion'),
+      categoria:            v('rp-categoria'),
+      hash_doc_identidad:   v('rp-hash-id'),
+      hash_doc_experiencia: v('rp-hash-exp'),
+    }),
+    'activar-empresa': () => ({
+      wallet:           v('ae-wallet'),
+      hash_comprobante: v('ae-hash'),
+      referencia_pago:  v('ae-ref'),
+    }),
+    'activar-proveedor': () => ({
+      wallet:           v('ap-wallet'),
+      hash_comprobante: v('ap-hash'),
+      referencia_pago:  v('ap-ref'),
+    }),
+    'renovar-membresia': () => ({
+      wallet:           v('rm-wallet'),
+      hash_comprobante: v('rm-hash'),
+      referencia_pago:  v('rm-ref'),
+    }),
+    'iniciar-auditoria': () => ({
+      empresa_id:   n('ia-empresa'),
+      proveedor_id: n('ia-proveedor'),
+    }),
+    'concluir-auditoria': () => ({
+      empresa_id:   n('ca-empresa'),
+      proveedor_id: n('ca-proveedor'),
+      resultado:    v('ca-resultado'),
+      hash_reporte: v('ca-hash'),
+      comentario:   v('ca-comentario'),
+    }),
+    'calificar': () => ({
+      empresa_id:              n('cp-empresa'),
+      proveedor_id:            n('cp-proveedor'),
+      puntuacion:              n('cp-p'),
+      puntuacion_cumplimiento: n('cp-pc'),
+      puntuacion_calidad:      n('cp-pca'),
+      puntuacion_precio:       n('cp-pp'),
+      comentario:              v('cp-comentario'),
+      recomienda:              document.getElementById('cp-recomienda').checked,
+    }),
+    'publicar-solicitud': () => ({
+      empresa_id:        n('ps-empresa'),
+      categoria:         v('ps-categoria'),
+      hash_detalle:      v('ps-hash'),
+      descripcion_breve: v('ps-desc'),
+      fecha_limite:      n('ps-fecha'),
+    }),
+    'asignar-solicitud': () => ({
+      empresa_id:   n('as-empresa'),
+      proveedor_id: n('as-proveedor'),
+      solicitud_id: v('as-id'),
+    }),
+    'cerrar-solicitud': () => ({
+      empresa_id:   n('cs-empresa'),
+      solicitud_id: v('cs-id'),
+      completada:   document.getElementById('cs-completada').checked,
+    }),
+  };
+
+  const endpoints = {
+    'register-empresa':    '/api/marketplace/empresa/register',
+    'register-proveedor':  '/api/marketplace/proveedor/register',
+    'activar-empresa':     '/api/marketplace/membresia/activar/empresa',
+    'activar-proveedor':   '/api/marketplace/membresia/activar/proveedor',
+    'renovar-membresia':   '/api/marketplace/membresia/renovar',
+    'iniciar-auditoria':   '/api/marketplace/auditoria/iniciar',
+    'concluir-auditoria':  '/api/marketplace/auditoria/concluir',
+    'calificar':           '/api/marketplace/calificacion',
+    'publicar-solicitud':  '/api/marketplace/solicitud/publicar',
+    'asignar-solicitud':   '/api/marketplace/solicitud/asignar',
+    'cerrar-solicitud':    '/api/marketplace/solicitud/cerrar',
+  };
+
+  async function send(id) {
+    const btn  = document.querySelector(`#panel-${id} .send-btn`);
+    const base = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const url  = base + endpoints[id];
+    const body = payloads[id]();
+    btn.classList.add('loading');
+    btn.disabled = true;
+    try {
+      const res  = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      });
+      const data = await res.json();
+      setResponse(id, res.status, data);
+    } catch (err) {
+      setResponse(id, 0, { error: err.message, hint: 'Verifica que el backend esté corriendo en ' + base });
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('ps-fecha').value = Math.floor(Date.now() / 1000) + 30 * 86400;
+</script>
+</body>
+</html>
