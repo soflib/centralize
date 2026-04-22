@@ -1,8 +1,16 @@
 # Marketplace Privado de Solicitaciones
 ### Solana · Anchor · Rust
 
+EL objetivo del proyecto y el cual es mas grande que solo algo sencillo, es:
+1. buscar / explorar un proyecto mas complejo y el comprotamiento de Solana
+2. poder realziar el proyecto asi como asesoria y redes privadas (esa fue la razon de levantar solana en docker aunque no es para redes privadas en PROD si bien poder comenzar en DEV).
+3. poder conseguir algun empleo en solana Rust y poder tener un proyecto mas complejo de estudio.
+
 Registro inmutable on-chain de membresías, auditorías, calificaciones
 y solicitudes privadas de servicio entre empresas y proveedores.
+
+REFERCIAN E INTRO A LA PRIMER ETAPA DEL PROYECTO
+centralize-intro.html (Open with live server)
 
 ---
 
@@ -69,78 +77,82 @@ programs/marketplace_solicitaciones/src/
 
 ---
 
-## Prerequisitos
+en .env.example viene el ejemplo del .env para infrastructure/dev
 
-```bash
-# Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Solana CLI
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+# 1. Instalar Solana en PATH
+curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> ~/.bashrc
 
-# Anchor
-cargo install --git https://github.com/coral-xyz/anchor avm --locked
-avm install latest
-avm use latest
-```
+**********************************************************************************************
+# 2. Keypair de tu wallet (si ya existe, sáltalo)
+solana-keygen new --outfile ~/.config/solana/id.json --no-bip39-passphrase
+solana address
+# si ya existe: solo corre → solana address
 
-## Comandos
+solana config set --url http://localhost:8899
 
-```bash
-# Instalar dependencias
-yarn install
-
-# Compilar
+**********************************************************************************************
+# 3. Primera compilación para crear la carpeta target/deploy/
+cd "/program"
 anchor build
 
-# Ejecutar tests
-anchor test
+**********************************************************************************************
+# 4. Generar keypair FIJO del programa (sobreescribe el que generó anchor)
+solana-keygen new --outfile target/deploy/centralize-keypair.json --no-bip39-passphrase
+if exists: solana-keygen pubkey target/deploy/centralize-keypair.json
 
-# Desplegar en devnet
-anchor deploy --provider.cluster devnet
-```
+**********************************************************************************************
+# 5. Ver el Program ID — ANÓTALO, es permanente
+solana-keygen pubkey target/deploy/centralize-keypair.json
 
----
+**********************************************************************************************
+# 6. Poner ese PROGRAM_ID en los 3 archivos:
+#    a) programs/centralize/src/lib.rs  → declare_id!("PROGRAM_ID")
+#    b) Anchor.toml → [programs.localnet] centralize = "PROGRAM_ID"
+#    c) infrastructure/.env → PROGRAM_ID=...
 
-## Modelo de pagos
+**********************************************************************************************
+# 7. Recompilar con el ID correcto
+anchor keys sync
+anchor build
 
-Los pagos NO se procesan en Solana. El flujo es:
+**********************************************************************************************
+# 8. Levantar Docker
+cd "/infrastructure"
+make dev
 
-1. Usuario paga con **tarjeta o SPEI** (MercadoPago / Stripe / Conekta)
-2. Tu backend recibe la confirmación del pago
-3. Tu backend llama a `activar_membresia` con la referencia del pago
-4. Solana registra de forma **inmutable** que esa membresía fue activada,
-   cuándo, con qué comprobante y por cuánto tiempo
+**********************************************************************************************
+# 9. Esperar 15 segundos que el validator arranque, luego airdrop
+solana airdrop 10 --url http://localhost:8899
 
-| Tipo        | Precio  | Duración |
-|-------------|---------|----------|
-| Empresa     | 300 MXN | 1 año    |
-| Proveedor   | 100 MXN | 1 año    |
+**********************************************************************************************
+# 10. Desplegar el contrato
+cd "/program"
+anchor program deploy target/deploy/centralize.so --provider.cluster localnet
 
----
+**********************************************************************************************
+# 11. Abrir el HTML y probar(Open with live server)
 
-## Qué vive on-chain vs off-chain
 
-| Dato                        | Dónde      |
-|-----------------------------|------------|
-| Estado de membresía         | On-chain   |
-| Resultado de auditoría      | On-chain   |
-| Calificaciones              | On-chain   |
-| Estado de solicitudes       | On-chain   |
-| Documentos (INE, actas)     | Off-chain (tu servidor / IPFS) |
-| Hash SHA-256 de documentos  | On-chain (para verificar integridad) |
-| Detalles completos solicitud| Off-chain  |
 
----
+en el frontend:
+marketplace-test.html (Open with live server)
 
-## PDAs (Program Derived Addresses)
+1. correr initialize_platform para generar
+{ 
+    "success": true, 
+    "tx_signature": "..............................EcEPhCA", 
+    "timestamp": "2026-04-22T18: 21: 00.603110073+00: 00", 
+    "mensaje": "Plataforma inicializada" 
+}
 
-```
-PlatformConfig    → ["platform"]
-Empresa           → ["empresa",      empresa_id_bytes]
-Proveedor         → ["proveedor",    proveedor_id_bytes]
-Membresia         → ["membresia",    autoridad_pubkey]
-Auditoria         → ["auditoria",    empresa_pubkey, proveedor_pubkey]
-Calificacion      → ["calificacion", empresa_pubkey, proveedor_pubkey]
-SolicitudServicio → ["solicitud",    empresa_pubkey, solicitud_id_bytes]
-```
+
+para llenar un register_empresa:
+Nombre y Categoria (cualquiera)
+para:
+RFC
+ACM0101011AA (12 chars)
+Hash Doc. Constitución (64 hex)
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
